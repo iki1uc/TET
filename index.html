@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
 <meta charset="UTF-8">
-<title>GHOST-SCAN – Systemlage</title>
+<title>TET – GHOST‑SCAN</title>
 
 <style>
   body { font-family: Arial; background:#111; color:#eee; }
@@ -21,35 +21,21 @@
 
 <body>
 
-<h1>GHOST‑SCAN – Systemlage</h1>
+<h1>TET – GHOST‑SCAN</h1>
 
 <div id="output"></div>
 
-<script src="/fin.e.js"></script>
+<script src="fin.e.js"></script>
 
 <script>
-// ------------------------------------------------------
-// RESPO-Liste (ALLE Cluster)
-// ------------------------------------------------------
 const RESPO_NAMES = [
-  "AIR",
-  "boerse",
-  "markt3",
-  "HOME",
-  "USE",
-  "ACSH",
-  "REAL",
-  "BIL",
-  "DU",
-  "NG"
+  "AIR","boerse","markt3","HOME","USE",
+  "ACSH","REAL","BIL","DU","NG"
 ];
 
-// ------------------------------------------------------
-// Loader
-// ------------------------------------------------------
 async function loadRespo(name){
   try {
-    const res = await fetch(`/RESPO/${name}.json`);
+    const res = await fetch(`RESPO/${name}.json`);
     return await res.json();
   } catch(e){
     return { NAME:name, MISS:true };
@@ -64,9 +50,6 @@ async function loadAllRespos(){
   return respos;
 }
 
-// ------------------------------------------------------
-// Renderer
-// ------------------------------------------------------
 function renderScan(scan){
   const out = document.getElementById("output");
   out.innerHTML = "";
@@ -95,9 +78,6 @@ function renderScan(scan){
   });
 }
 
-// ------------------------------------------------------
-// Start
-// ------------------------------------------------------
 loadAllRespos().then(respos => {
   const scan = respos.map(r => GHOST_SCAN_REAL(r));
   renderScan(scan);
