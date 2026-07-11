@@ -2,87 +2,64 @@
 <html lang="de">
 <head>
 <meta charset="UTF-8">
-<title>TET – GHOST‑SCAN</title>
+<title>TET – Systemübersicht</title>
 
 <style>
-  body { font-family: Arial; background:#111; color:#eee; }
-  h1 { text-align:center; }
-  .respo-box {
-    border:1px solid #444;
-    padding:10px;
-    margin:10px;
-    background:#222;
+  body {
+    background:#111;
+    color:#eee;
+    font-family:Arial;
+    padding:40px;
   }
-  .ok { color:#00ff88; }
-  .help { color:#ffcc00; }
-  .error { color:#ff4444; }
+  h1 {
+    text-align:center;
+    margin-bottom:20px;
+  }
+  .box {
+    background:#222;
+    border:1px solid #444;
+    padding:20px;
+    margin-bottom:20px;
+  }
+  h2 {
+    color:#00ff88;
+  }
 </style>
 </head>
 
 <body>
 
-<h1>TET – GHOST‑SCAN</h1>
+<h1>TET – Systemübersicht</h1>
 
-<div id="output"></div>
+<div class="box">
+  <h2>Was ist TET?</h2>
+  <p>TET ist ein Modul innerhalb deiner System‑Reihe (MROR, GO, 3TH, RIZ, TET).  
+     Es dient als eigenständige Einheit zur Darstellung, Strukturierung und
+     Organisation von Daten, Zeitrastern und Identitäten.</p>
+</div>
 
-<script src="fin.e.js"></script>
+<div class="box">
+  <h2>Was macht TET?</h2>
+  <p>TET stellt Informationen strukturiert dar.  
+     Es kann Raster anzeigen, ID‑Matrixen bereitstellen und Systemdaten
+     übersichtlich präsentieren.  
+     TET ist ein <b>Anzeige‑Modul</b>, kein Berechnungs‑Kernel.</p>
+</div>
 
-<script>
-const RESPO_NAMES = [
-  "AIR","boerse","markt3","HOME","USE",
-  "ACSH","REAL","BIL","DU","NG"
-];
+<div class="box">
+  <h2>Welche Funktionen hat TET?</h2>
+  <ul>
+    <li>Anzeige von 3×11‑Zeit‑Raster</li>
+    <li>Darstellung einer ID‑Matrix</li>
+    <li>Lesbare Übersicht über System‑Elemente</li>
+    <li>Modul‑Struktur für spätere Erweiterungen</li>
+  </ul>
+</div>
 
-async function loadRespo(name){
-  try {
-    const res = await fetch(`RESPO/${name}.json`);
-    return await res.json();
-  } catch(e){
-    return { NAME:name, MISS:true };
-  }
-}
-
-async function loadAllRespos(){
-  const respos = [];
-  for(const n of RESPO_NAMES){
-    respos.push(await loadRespo(n));
-  }
-  return respos;
-}
-
-function renderScan(scan){
-  const out = document.getElementById("output");
-  out.innerHTML = "";
-
-  scan.forEach(r => {
-    const box = document.createElement("div");
-    box.className = "respo-box";
-
-    let statusClass = "ok";
-    if(r.RESULT === "HELFEN") statusClass = "help";
-    if(r.ERROR === true) statusClass = "error";
-    if(r.MISS === true) statusClass = "error";
-
-    box.innerHTML = `
-      <h2 class="${statusClass}">${r.NAME}</h2>
-      <p><b>ID:</b> ${r.ID}</p>
-      <p><b>LAGE:</b> ${r.RAUM ? JSON.stringify(r.RAUM) : "(keine LAGE)"}</p>
-      <p><b>STATUS:</b> ${r.STATUS}</p>
-      <p><b>RESULT:</b> ${r.RESULT}</p>
-      <p><b>OUT:</b> ${JSON.stringify(r.OUT)}</p>
-      <p><b>REAL:</b> ${r.WAHRHEIT || "?"}</p>
-      <p><b>EDIT:</b> ${r.IST_IST || "?"}</p>
-    `;
-
-    out.appendChild(box);
-  });
-}
-
-loadAllRespos().then(respos => {
-  const scan = respos.map(r => GHOST_SCAN_REAL(r));
-  renderScan(scan);
-});
-</script>
+<div class="box">
+  <h2>Status</h2>
+  <p>TET ist aktiv und bereit für Erweiterungen.</p>
+</div>
 
 </body>
 </html>
