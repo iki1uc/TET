@@ -2,9 +2,16 @@
 <html lang="de">
 <head>
 <meta charset="UTF-8">
-<title>TIME 3×11 Scroll + Zoom + Move</title>
+<title>TET – TIME 3×11 Scroll + Zoom + Move</title>
 
 <style>
+  body {
+    margin: 0;
+    background: #111;
+    color: #eee;
+    font-family: Arial;
+  }
+
   .toolbar {
     width: 100%;
     text-align: center;
@@ -15,11 +22,13 @@
     padding: 6px 12px;
     margin: 0 4px;
     font-size: 14px;
+    cursor: pointer;
   }
 
   .scroll-container {
     width: 100%;
     overflow-x: auto;
+    overflow-y: hidden;
     border: 1px solid #444;
     padding: 10px;
     box-sizing: border-box;
@@ -44,9 +53,10 @@
     display: flex;
     justify-content: center;
     align-items: center;
-    font-family: sans-serif;
     background: #f8f8f8;
+    color: #000;
     user-select: none;
+    font-size: 14px;
   }
 
   .cell.active {
@@ -111,8 +121,7 @@ function render3x11(mask){
       const hit = mask.find(s => s.pos[0] === r && s.pos[1] === c);
 
       if(hit){
-        if(hit.refs) cell.textContent = hit.refs.join(", ");
-        else cell.textContent = hit.ref || "";
+        cell.textContent = hit.refs.join(", ");
       }
 
       grid.appendChild(cell);
@@ -121,7 +130,7 @@ function render3x11(mask){
 }
 
 // ------------------------------------------------------
-// Beispielmaske
+// Example Mask
 // ------------------------------------------------------
 const timeExample = [
   { pos:[1,4], refs:["M-001"] },
@@ -132,14 +141,14 @@ const timeExample = [
 
 const mask3x11 = timeExample.map(s => ({
   pos: s.pos,
-  refs: s.refs || (s.ref ? [s.ref] : ["?"]),
+  refs: s.refs || ["?"],
   phase: s.phase || null
 }));
 
 render3x11(mask3x11);
 
 // ------------------------------------------------------
-// Movement Engine (Auto-Move + Wrap-Around)
+// Movement Engine
 // ------------------------------------------------------
 let active = { r: 1, c: 1 };
 
@@ -176,6 +185,7 @@ document.addEventListener("keydown", e => {
 // ------------------------------------------------------
 // Touch Swipe Movement
 // ------------------------------------------------------
+const grid = document.getElementById("grid");
 let startX = 0, startY = 0;
 
 grid.addEventListener("touchstart", e => {
