@@ -1,8 +1,8 @@
-Ebene: octa²
-Schicht: RIZ → TET → RIZ
-Front: RIZ (3E)
-Core: TET (3E)
-Back: RIZ (3E)
-Gesamt: 9E
-Matrix: 9×9 IN/OUT
-System: nicht pressbar
+export const XyX = {
+  frontRIZ: ["DOOR", "DOO", "SHELL"],
+  coreTET:  ["ESSO", "ROLLER", "KASSE"],
+  backRIZ:  ["DOOR", "DOO", "SHELL"],
+
+  layer: "octa²",
+  totalE: 9
+};
