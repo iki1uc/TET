@@ -1,211 +1,62 @@
-<!DOCTYPE html>
-<html lang="de">
-<head>
-<meta charset="UTF-8">
-<title>TET – TIME 3×11 Scroll + Zoom + Move</title>
+<div class="nine-engine">
+  <div class="nine-title">9×9 • IN/OUT Begehrschicht</div>
 
-<style>
-  body {
-    margin: 0;
-    background: #111;
-    color: #eee;
-    font-family: Arial;
-  }
+  <div class="nine-desc">
+    <div class="row"><span class="key">IN</span><span class="val">Energieaufnahme (Prefetch)</span></div>
+    <div class="row"><span class="key">OUT</span><span class="val">Energieabgabe (Beender/Anfänger)</span></div>
+    <div class="row"><span class="key">Ebene</span><span class="val">octa² (geschlossene RESPO‑Schicht)</span></div>
+    <div class="row"><span class="key">Matrix</span><span class="val">9×9 entschlackt (statt 3×11)</span></div>
+  </div>
 
-  .toolbar {
-    width: 100%;
-    text-align: center;
-    margin: 10px 0;
-  }
-
-  .toolbar button {
-    padding: 6px 12px;
-    margin: 0 4px;
-    font-size: 14px;
-    cursor: pointer;
-  }
-
-  .scroll-container {
-    width: 100%;
-    overflow-x: auto;
-    overflow-y: hidden;
-    border: 1px solid #444;
-    padding: 10px;
-    box-sizing: border-box;
-    touch-action: pan-x pan-y;
-  }
-
-  .zoom-wrapper {
-    transform-origin: top left;
-    transition: transform 0.2s ease;
-  }
-
-  .grid {
-    display: grid;
-    grid-template-columns: repeat(11, 80px);
-    grid-template-rows: repeat(3, 60px);
-    gap: 6px;
-    width: max-content;
-  }
-
-  .cell {
-    border: 1px solid #444;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    background: #f8f8f8;
-    color: #000;
-    user-select: none;
-    font-size: 14px;
-  }
-
-  .cell.active {
-    outline: 3px solid #0077ff;
-    background: rgba(0,120,255,0.15);
-  }
-</style>
-</head>
-
-<body>
-
-<div class="toolbar">
-  <button id="zoomIn">Zoom +</button>
-  <button id="zoomOut">Zoom −</button>
-  <button id="zoomReset">Reset</button>
-</div>
-
-<div class="scroll-container">
-  <div id="zoomWrapper" class="zoom-wrapper">
-    <div id="grid" class="grid"></div>
+  <div class="nine-grid">
+    <!-- 9×9 Grid -->
+    <div class="gwrap">
+      <!-- 81 cells -->
+      <!-- entschlackt: keine IDs, keine Lärmstruktur -->
+      <!-- reine Energiefläche -->
+      <!-- du kannst später IN/OUT‑Punkte setzen -->
+      ${Array.from({length: 81}).map(()=>`<div class="cell"></div>`).join("")}
+    </div>
   </div>
 </div>
 
-<script>
-// ------------------------------------------------------
-// Zoom
-// ------------------------------------------------------
-let zoom = 1;
-
-function applyZoom(){
-  document.getElementById("zoomWrapper").style.transform = `scale(${zoom})`;
-}
-
-document.getElementById("zoomIn").onclick = () => {
-  zoom = Math.min(zoom + 0.1, 3);
-  applyZoom();
-};
-
-document.getElementById("zoomOut").onclick = () => {
-  zoom = Math.max(zoom - 0.1, 0.3);
-  applyZoom();
-};
-
-document.getElementById("zoomReset").onclick = () => {
-  zoom = 1;
-  applyZoom();
-};
-
-// ------------------------------------------------------
-// Grid Renderer
-// ------------------------------------------------------
-function render3x11(mask){
-  const grid = document.getElementById("grid");
-  grid.innerHTML = "";
-
-  for(let r=1; r<=3; r++){
-    for(let c=1; c<=11; c++){
-      const cell = document.createElement("div");
-      cell.className = "cell";
-      cell.id = `cell-${r}-${c}`;
-
-      const hit = mask.find(s => s.pos[0] === r && s.pos[1] === c);
-
-      if(hit){
-        cell.textContent = hit.refs.join(", ");
-      }
-
-      grid.appendChild(cell);
-    }
+<style>
+  .nine-engine {
+    background: #0d0d0d;
+    border: 1px solid #333;
+    padding: 30px;
+    border-radius: 12px;
+    font-family: monospace;
+    color: #e6e6e6;
+    max-width: 600px;
+    margin: 20px auto;
   }
-}
-
-// ------------------------------------------------------
-// Example Mask
-// ------------------------------------------------------
-const timeExample = [
-  { pos:[1,4], refs:["M-001"] },
-  { pos:[2,5], refs:["M-017","M-023"], phase:[0.2,0.7] },
-  { pos:[3,2], refs:["M-099"] },
-  { pos:[1,10], refs:["M-777"] }
-];
-
-const mask3x11 = timeExample.map(s => ({
-  pos: s.pos,
-  refs: s.refs || ["?"],
-  phase: s.phase || null
-}));
-
-render3x11(mask3x11);
-
-// ------------------------------------------------------
-// Movement Engine
-// ------------------------------------------------------
-let active = { r: 1, c: 1 };
-
-function highlightActive(){
-  document.querySelectorAll(".cell").forEach(c => c.classList.remove("active"));
-  const el = document.getElementById(`cell-${active.r}-${active.c}`);
-  if(el) el.classList.add("active");
-}
-
-function move(dir){
-  const rows = 3;
-  const cols = 11;
-
-  if(dir === "left")  active.c = (active.c - 1 + cols) % cols || cols;
-  if(dir === "right") active.c = (active.c % cols) + 1;
-  if(dir === "up")    active.r = (active.r - 1 + rows) % rows || rows;
-  if(dir === "down")  active.r = (active.r % rows) + 1;
-
-  highlightActive();
-}
-
-highlightActive();
-
-// ------------------------------------------------------
-// Keyboard Movement
-// ------------------------------------------------------
-document.addEventListener("keydown", e => {
-  if(e.key === "ArrowLeft")  move("left");
-  if(e.key === "ArrowRight") move("right");
-  if(e.key === "ArrowUp")    move("up");
-  if(e.key === "ArrowDown")  move("down");
-});
-
-// ------------------------------------------------------
-// Touch Swipe Movement
-// ------------------------------------------------------
-const grid = document.getElementById("grid");
-let startX = 0, startY = 0;
-
-grid.addEventListener("touchstart", e => {
-  startX = e.touches[0].clientX;
-  startY = e.touches[0].clientY;
-});
-
-grid.addEventListener("touchend", e => {
-  const dx = e.changedTouches[0].clientX - startX;
-  const dy = e.changedTouches[0].clientY - startY;
-
-  if(Math.abs(dx) > Math.abs(dy)){
-    if(dx > 20) move("right");
-    if(dx < -20) move("left");
-  } else {
-    if(dy > 20) move("down");
-    if(dy < -20) move("up");
+  .nine-title {
+    font-size: 26px;
+    margin-bottom: 20px;
+    letter-spacing: 1px;
+    color: #7fd0ff;
+    text-align: center;
   }
-});
-</script>
+  .nine-desc .row {
+    display: flex;
+    justify-content: space-between;
+    margin: 6px 0;
+  }
+  .key { color: #7fd0ff; }
+  .val { color: #ccc; }
 
-</body>
-</html>
+  .nine-grid .gwrap {
+    display: grid;
+    grid-template-columns: repeat(9, 40px);
+    grid-template-rows: repeat(9, 40px);
+    gap: 4px;
+    margin-top: 20px;
+    justify-content: center;
+  }
+  .cell {
+    background: #1a1a1a;
+    border: 1px solid #333;
+    border-radius: 4px;
+  }
+</style>
