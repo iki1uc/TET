@@ -1,66 +1,867 @@
-<div class="engine">
-  <div class="engine-title">TETRIZ • octa² Engine</div>
-
-  <div class="engine-formula">
-    <span class="fx">(x(TET(y(RIZ(z(LEGO(x))x)RIZ)y)z))</span>
-  </div>
-
-  <div class="engine-desc">
-    <div class="row">
-      <span class="key">LEGO</span>
-      <span class="val">Fixpunkt (−1 + Stellung)</span>
-    </div>
-    <div class="row">
-      <span class="key">TET</span>
-      <span class="val">Bewegung (3E‑Front)</span>
-    </div>
-    <div class="row">
-      <span class="key">RIZ</span>
-      <span class="val">Gegenbewegung (3E‑Back)</span>
-    </div>
-    <div class="row">
-      <span class="key">x, y, z</span>
-      <span class="val">tauschbare Impuls‑Variablen</span>
-    </div>
-    <div class="row">
-      <span class="key">Ebene</span>
-      <span class="val">octa² (geschlossene RESPO‑Schicht)</span>
-    </div>
-  </div>
-</div>
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TETRIZ · RIZ · SHELL · WHIRL · UNIFIED</title>
 
 <style>
-  .engine {
-    background: #0d0d0d;
-    border: 1px solid #333;
-    padding: 30px;
-    border-radius: 12px;
-    font-family: monospace;
-    color: #e6e6e6;
-    max-width: 600px;
-  }
-  .engine-title {
-    font-size: 26px;
-    margin-bottom: 20px;
-    letter-spacing: 1px;
-    color: #7fd0ff;
-  }
-  .engine-formula {
-    font-size: 18px;
-    margin-bottom: 25px;
-    padding: 10px 0;
-    border-left: 3px solid #7fd0ff;
-    padding-left: 12px;
-  }
-  .engine-desc .row {
+:root {
+    --bg: #0a0a0f;
+    --fg: #0f0;
+    --gold: #ffd700;
+    --tet: #ff6b6b;
+    --riz: #6b6bff;
+    --lego: #ffd93d;
+    --shell: #6cf;
+    --doo: #ff44ff;
+    --door: #ff8c00;
+    --octa: #4f4;
+    --whirl: #ff69b4;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+    background: var(--bg);
+    color: var(--fg);
+    font-family: 'Consolas', monospace;
+    min-height: 100vh;
+    display: grid;
+    grid-template-rows: auto 1fr auto;
+    gap: 6px;
+    padding: 10px;
+    overflow: hidden;
+}
+
+header {
     display: flex;
     justify-content: space-between;
-    margin: 6px 0;
-  }
-  .key {
-    color: #7fd0ff;
-  }
-  .val {
-    color: #ccc;
-  }
+    align-items: center;
+    border-bottom: 2px solid var(--gold);
+    padding-bottom: 6px;
+    flex-wrap: wrap;
+    gap: 4px;
+}
+header h1 {
+    font-size: 14px;
+    color: var(--gold);
+    letter-spacing: 2px;
+}
+header h1 .tetriz { color: var(--tet); }
+header h1 .riz { color: var(--riz); }
+header h1 .shell { color: var(--shell); }
+header h1 .whirl { color: var(--whirl); }
+#info-bar { font-size: 9px; color: #666; display: flex; gap: 8px; align-items: center; }
+
+main {
+    display: grid;
+    grid-template-columns: 3fr 1.2fr;
+    gap: 6px;
+    height: 100%;
+    min-height: 0;
+}
+
+#canvas-wrap {
+    background: #0a0a0f;
+    border: 1px solid #1a1a2a;
+    border-radius: 10px;
+    padding: 6px;
+    position: relative;
+    overflow: hidden;
+}
+#canvas-wrap canvas {
+    width: 100%;
+    height: 100%;
+    border-radius: 6px;
+    display: block;
+}
+#canvas-overlay {
+    position: absolute;
+    bottom: 8px;
+    left: 8px;
+    font-size: 7px;
+    color: #444;
+    pointer-events: none;
+    background: rgba(0,0,0,0.7);
+    padding: 3px 8px;
+    border-radius: 3px;
+}
+#canvas-overlay .octa { color: var(--octa); }
+#canvas-overlay .whirl { color: var(--whirl); }
+
+#panel {
+    background: #0a0a0f;
+    border: 1px solid #1a1a2a;
+    border-radius: 10px;
+    padding: 6px;
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    overflow-y: auto;
+    max-height: 100%;
+}
+#panel h3 {
+    font-size: 9px;
+    color: #666;
+    border-bottom: 1px solid #1a1a2a;
+    padding-bottom: 3px;
+}
+
+#engines {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr 1fr;
+    gap: 3px;
+}
+.engine-box {
+    background: rgba(255,255,255,0.02);
+    border-radius: 6px;
+    padding: 4px 6px;
+    text-align: center;
+    border: 1px solid rgba(255,255,255,0.04);
+    cursor: pointer;
+    transition: all 0.3s;
+}
+.engine-box:hover {
+    border-color: var(--gold);
+    background: rgba(255,215,61,0.05);
+}
+.engine-box .sym { font-size: 14px; display: block; }
+.engine-box .label { color: #666; font-size: 5px; text-transform: uppercase; letter-spacing: 1px; }
+.engine-box .desc { color: #444; font-size: 4px; }
+.engine-box.active { border-color: var(--gold); background: rgba(255,215,61,0.08); }
+
+#log {
+    flex: 1;
+    overflow-y: auto;
+    font-size: 7px;
+    color: #6a6a8a;
+    line-height: 1.3;
+    min-height: 30px;
+    max-height: 60px;
+    background: #06060a;
+    border-radius: 4px;
+    padding: 3px 5px;
+}
+#log .entry { padding: 1px 0; border-bottom: 1px solid #0a0a12; }
+#log .time { color: #444; }
+#log .msg.tet { color: var(--tet); }
+#log .msg.riz { color: var(--riz); }
+#log .msg.lego { color: var(--lego); }
+#log .msg.shell { color: var(--shell); }
+#log .msg.doo { color: var(--doo); }
+#log .msg.door { color: var(--door); }
+#log .msg.octa { color: var(--octa); }
+#log .msg.whirl { color: var(--whirl); }
+
+#metrics {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr 1fr;
+    gap: 2px;
+}
+.metric {
+    background: #0e0e1a;
+    border-radius: 3px;
+    padding: 2px 3px;
+    text-align: center;
+    border: 1px solid #1a1a2a;
+}
+.metric .label { color: #666; font-size: 5px; text-transform: uppercase; }
+.metric .value { font-size: 9px; font-weight: bold; }
+.metric.tet .value { color: var(--tet); }
+.metric.riz .value { color: var(--riz); }
+.metric.shell .value { color: var(--shell); }
+.metric.whirl .value { color: var(--whirl); }
+
+#controls {
+    display: flex;
+    gap: 2px;
+    flex-wrap: wrap;
+}
+button {
+    background: #111;
+    color: var(--fg);
+    border: 1px solid #333;
+    padding: 3px 10px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-family: inherit;
+    font-size: 8px;
+    transition: all 0.2s;
+}
+button:hover { background: #1a1a2a; border-color: var(--gold); }
+button:active { transform: scale(0.95); }
+button.primary { border-color: var(--gold); color: var(--gold); }
+button.primary:hover { background: var(--gold); color: #000; }
+button.tet { border-color: var(--tet); color: var(--tet); }
+button.tet:hover { background: var(--tet); color: #000; }
+button.riz { border-color: var(--riz); color: var(--riz); }
+button.riz:hover { background: var(--riz); color: #000; }
+button.shell { border-color: var(--shell); color: var(--shell); }
+button.shell:hover { background: var(--shell); color: #000; }
+button.whirl { border-color: var(--whirl); color: var(--whirl); }
+button.whirl:hover { background: var(--whirl); color: #000; }
+button.danger { border-color: #f44; color: #f44; }
+button.danger:hover { background: #f44; color: #000; }
+
+@media (max-width: 800px) {
+    main { grid-template-columns: 1fr; }
+    #panel { max-height: 180px; }
+    #engines { grid-template-columns: 1fr 1fr; }
+}
 </style>
+</head>
+<body>
+
+<header>
+    <h1>
+        <span class="tetriz">◈ TETRIZ</span>
+        <span style="color:#666;">·</span>
+        <span class="riz">RIZ</span>
+        <span style="color:#666;">·</span>
+        <span class="shell">SHELL</span>
+        <span style="color:#666;">·</span>
+        <span class="whirl">🌀 WHIRL</span>
+    </h1>
+    <div id="info-bar">
+        <span id="clock">⏱️ --:--:--</span>
+        <span id="state-display" style="color:var(--gold);">● bereit</span>
+        <span id="cycle-display" style="color:#666;">CYC 0</span>
+    </div>
+</header>
+
+<main>
+    <div id="canvas-wrap">
+        <canvas id="unifiedCanvas"></canvas>
+        <div id="canvas-overlay">
+            <span class="octa">◈</span> TETRIZ · RIZ · SHELL · <span class="whirl">🌀</span> WHIRL
+        </div>
+    </div>
+
+    <div id="panel">
+        <h3>🎯 UNIFIED · TETRIZ · RIZ · SHELL · WHIRL</h3>
+
+        <div id="engines">
+            <div class="engine-box active" data-engine="TETRIZ">
+                <span class="sym">◈</span>
+                <span class="label">TETRIZ</span>
+                <span class="desc">LEGO·TET·RIZ</span>
+            </div>
+            <div class="engine-box" data-engine="SHELL">
+                <span class="sym">🐚</span>
+                <span class="label">SHELL</span>
+                <span class="desc">IN·CORE·OUT</span>
+            </div>
+            <div class="engine-box" data-engine="DOO">
+                <span class="sym">🔑</span>
+                <span class="label">DOO</span>
+                <span class="desc">Abfluss</span>
+            </div>
+            <div class="engine-box" data-engine="DOOR">
+                <span class="sym">🚪</span>
+                <span class="label">DOOR</span>
+                <span class="desc">Öffnung</span>
+            </div>
+        </div>
+
+        <div id="metrics">
+            <div class="metric tet"><div class="label">TET</div><div class="value" id="tet-value">0</div></div>
+            <div class="metric riz"><div class="label">RIZ</div><div class="value" id="riz-value">0</div></div>
+            <div class="metric shell"><div class="label">SHELL</div><div class="value" id="shell-value">0</div></div>
+            <div class="metric whirl"><div class="label">WHIRL</div><div class="value" id="whirl-value">0</div></div>
+        </div>
+
+        <div id="log">
+            <div class="entry"><span class="time">[INIT]</span> <span class="msg octa">◈ UNIFIED · TETRIZ · RIZ · SHELL · WHIRL</span></div>
+            <div class="entry"><span class="time">[INIT]</span> <span class="msg tet">TET · LEGO · RIZ · Gegen-Engine</span></div>
+            <div class="entry"><span class="time">[INIT]</span> <span class="msg shell">🐚 SHELL · real3E · IN/CORE/OUT</span></div>
+            <div class="entry"><span class="time">[INIT]</span> <span class="msg whirl">🌀 WHIRL · 81 Felder · CAUSE/WIND/ZOOOG</span></div>
+        </div>
+
+        <div id="controls">
+            <button class="primary" id="btn-start">▶ START</button>
+            <button class="tet" id="btn-tet">◈ TET</button>
+            <button class="riz" id="btn-riz">🌀 RIZ</button>
+            <button class="shell" id="btn-shell">🐚 SHELL</button>
+            <button class="whirl" id="btn-whirl">🌀 WHIRL</button>
+            <button class="danger" id="btn-reset">⟲ RESET</button>
+            <button id="btn-auto">▶ AUTO</button>
+        </div>
+    </div>
+</main>
+
+<script>
+// ============================================================
+// UNIFIED · TETRIZ · RIZ · SHELL · WHIRL
+// ============================================================
+
+// --- TETRIZ-KERN ---
+function LEGO_FIX(x) { return { fix: x, type: 'LEGO', lock: true }; }
+function TET(v) { return { move: v, type: 'TET' }; }
+function RIZ(v) { return { move: -v, type: 'RIZ' }; }
+
+function TETRIZ(x, y, z) {
+    var lego = LEGO_FIX(x);
+    var forward = TET(y);
+    var backward = RIZ(z);
+    return {
+        x: x, y: y, z: z,
+        lego: lego,
+        forward: forward,
+        backward: backward,
+        formula: '(x(TET(y(RIZ(z(LEGO(x))x)RIZ)y)z))'
+    };
+}
+
+// --- SHELL ---
+var SHELL = {
+    real3E: ['SHELL-IN', 'SHELL-CORE', 'SHELL-OUT'],
+    ability: {
+        station: 'aktiv',
+        orbit: 'aktiv',
+        kooridor: 'aktiv',
+        x4: 'bereit',
+        x16: 'bereit',
+        x128: 'bereit',
+        octa2: 'geschlossen',
+        matrix_3x3x3x3: 'bereit'
+    },
+    layer: 'octa²',
+    type: 'SHELL-real',
+    total: 3
+};
+
+// --- DOO ---
+var DOO = {
+    name: 'DOO',
+    role: 'Kooridor-Abfluss',
+    ability: { station: 'abführen', orbit: 'stabilisieren', kooridor: 'schließen' },
+    layer: 'octa²',
+    type: 'RIZ-back',
+    total: 1
+};
+
+// --- DOOR ---
+var DOOR = {
+    name: 'DOOR',
+    role: 'Kooridor-Öffnung',
+    ability: { station: 'öffnen', orbit: 'durchlassen', kooridor: 'aktivieren' },
+    layer: 'octa²',
+    type: 'RIZ-front',
+    total: 1
+};
+
+// --- WHIRL-KERN (aus der WHIRL-Engine) ---
+var CAUSE_CASCADE = [3, 9, 27, 81];
+var RESPO_MODULES = [
+    'RESPOx', 'RESPO_ARG_SCAN', 'RESPO_UI_STATUS', 'RESPO-MULTI-NORM',
+    'RESPO-Code-Pipeline', 'RESPO', 'RESPO-Beam-Point', 'RESPO.Ort-LAGE',
+    'RESPO-Station', 'RESPO-Name', 'RESPO_MODUL_LOOP', 'respo-scan-hub.app',
+    'RESPO_CORE_ROUTER', 'Respo-Rotation', 'respo-ghost-bridge.cloud',
+    'RESPO_MOTION_PRIME', 'RESPO_POSITION_USER'
+];
+
+function nextCause(level) {
+    var idx = CAUSE_CASCADE.indexOf(level);
+    return CAUSE_CASCADE[(idx + 1) % CAUSE_CASCADE.length] || level;
+}
+
+// ============================================================
+// CANVAS SETUP
+// ============================================================
+var canvas = document.getElementById('unifiedCanvas');
+var ctx = canvas.getContext('2d');
+var W, H, cx, cy, radius;
+
+function resizeCanvas() {
+    var wrap = document.getElementById('canvas-wrap');
+    var rect = wrap.getBoundingClientRect();
+    canvas.width = rect.width;
+    canvas.height = rect.height;
+    W = canvas.width;
+    H = canvas.height;
+    cx = W / 2;
+    cy = H / 2;
+    radius = Math.min(W, H) * 0.38;
+}
+resizeCanvas();
+window.addEventListener('resize', resizeCanvas);
+
+// ============================================================
+// STATE
+// ============================================================
+var state = {
+    running: false,
+    autoMode: false,
+    cycle: 0,
+    t: 0,
+    activeEngine: 'TETRIZ',
+    tetCount: 0,
+    rizCount: 0,
+    shellCount: 0,
+    whirlCount: 0,
+    tetriz: TETRIZ(1, 2, 3),
+    shell: SHELL,
+    doo: DOO,
+    door: DOOR,
+    // WHIRL
+    causeLevel: 3,
+    windLevel: 12,
+    zooogBoost: 1.333,
+    currentField: 0,
+    fields: 81,
+    direction: 1
+};
+
+// ============================================================
+// LOG
+// ============================================================
+function log(msg, type) {
+    var logDiv = document.getElementById('log');
+    var entry = document.createElement('div');
+    entry.className = 'entry';
+    var time = new Date().toLocaleTimeString();
+    var cls = type === 'tet' ? 'tet' : type === 'riz' ? 'riz' :
+              type === 'lego' ? 'lego' : type === 'shell' ? 'shell' :
+              type === 'doo' ? 'doo' : type === 'door' ? 'door' :
+              type === 'octa' ? 'octa' : type === 'whirl' ? 'whirl' : '';
+    entry.innerHTML = '<span class="time">[' + time + ']</span> <span class="msg ' + cls + '">' + msg + '</span>';
+    logDiv.appendChild(entry);
+    logDiv.scrollTop = logDiv.scrollHeight;
+    while (logDiv.children.length > 50) logDiv.removeChild(logDiv.firstChild);
+}
+
+// ============================================================
+// KERN-FUNKTIONEN
+// ============================================================
+
+function activateEngine(key) {
+    state.activeEngine = key;
+    var els = document.querySelectorAll('.engine-box');
+    for (var i = 0; i < els.length; i++) {
+        var el = els[i];
+        if (el.getAttribute('data-engine') === key) {
+            el.classList.add('active');
+        } else {
+            el.classList.remove('active');
+        }
+    }
+
+    var msg = '';
+    switch(key) {
+        case 'TETRIZ':
+            state.tetCount++;
+            state.rizCount++;
+            var t = state.tetriz;
+            msg = '◈ TETRIZ: LEGO=' + t.lego.fix + ' → TET=' + t.forward.move + ' → RIZ=' + t.backward.move;
+            log(msg, 'tet');
+            break;
+        case 'SHELL':
+            state.shellCount++;
+            msg = '🐚 SHELL: ' + SHELL.real3E.join(' → ');
+            log(msg, 'shell');
+            break;
+        case 'DOO':
+            msg = '🔑 DOO: ' + DOO.role + ' · ' + DOO.ability.station;
+            log(msg, 'doo');
+            break;
+        case 'DOOR':
+            msg = '🚪 DOOR: ' + DOOR.role + ' · ' + DOOR.ability.station;
+            log(msg, 'door');
+            break;
+    }
+
+    document.getElementById('tet-value').textContent = state.tetCount;
+    document.getElementById('riz-value').textContent = state.rizCount;
+    document.getElementById('shell-value').textContent = state.shellCount;
+    document.getElementById('whirl-value').textContent = state.whirlCount;
+}
+
+function whirlSpin() {
+    state.whirlCount++;
+    var cause = state.causeLevel;
+    var wind = cause * 4;
+    var zooog = cause * 1.333;
+    state.currentField = (state.currentField + state.direction) % state.fields;
+    var moduleIndex = state.currentField % RESPO_MODULES.length;
+    var activeModule = RESPO_MODULES[moduleIndex];
+
+    if (state.cycle % 20 === 0) {
+        log('🌀 WHIRL: Feld ' + state.currentField + ' → ' + activeModule + ' · CAUSE=' + cause, 'whirl');
+    }
+
+    document.getElementById('whirl-value').textContent = state.whirlCount;
+    return { cause, wind, zooog, activeModule };
+}
+
+function causeStep() {
+    state.causeLevel = nextCause(state.causeLevel);
+    log('⚡ CAUSE: ' + state.causeLevel, 'whirl');
+}
+
+function tetrizStep() {
+    var t = state.tetriz;
+    var newX = t.x + Math.sin(state.t) * 0.05;
+    var newY = t.y + Math.cos(state.t * 0.7) * 0.05;
+    var newZ = t.z + Math.sin(state.t * 0.5) * 0.05;
+    state.tetriz = TETRIZ(newX, newY, newZ);
+    return state.tetriz;
+}
+
+// ============================================================
+// RENDER
+// ============================================================
+function render() {
+    ctx.clearRect(0, 0, W, H);
+
+    var grad = ctx.createRadialGradient(cx, cy, 10, cx, cy, W * 0.6);
+    grad.addColorStop(0, '#0a0a1a');
+    grad.addColorStop(1, '#000');
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, 0, W, H);
+
+    drawTetriz();
+    drawShellLayer();
+    drawWhirlRing();
+    drawStatus();
+
+    state.t += 0.008;
+    if (state.running) {
+        state.cycle++;
+        tetrizStep();
+        if (state.cycle % 20 === 0) whirlSpin();
+        if (state.cycle % 60 === 0) causeStep();
+        if (state.cycle % 30 === 0) {
+            var engines = ['TETRIZ', 'SHELL', 'DOO', 'DOOR'];
+            var idx = Math.floor(Math.random() * engines.length);
+            activateEngine(engines[idx]);
+        }
+        document.getElementById('cycle-display').textContent = 'CYC ' + state.cycle;
+    }
+
+    requestAnimationFrame(render);
+}
+render();
+
+// ============================================================
+// ZEICHEN-FUNKTIONEN
+// ============================================================
+
+function drawTetriz() {
+    var t = state.tetriz;
+    var r = radius * 0.3;
+
+    // LEGO (Fixpunkt)
+    var lx = cx + Math.cos(state.t * 0.1) * r * 0.2;
+    var ly = cy + Math.sin(state.t * 0.1) * r * 0.2;
+    ctx.fillStyle = 'rgba(255,215,61,0.1)';
+    ctx.shadowColor = '#ffd93d';
+    ctx.shadowBlur = 10;
+    ctx.beginPath();
+    ctx.arc(lx, ly, 6 + t.lego.fix, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.shadowBlur = 0;
+    ctx.fillStyle = '#ffd93d';
+    ctx.font = '6px Consolas';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('LEGO', lx, ly);
+
+    // TET (rechts)
+    var tx = cx + Math.cos(state.t * 0.2 + 1) * r * 0.7;
+    var ty = cy + Math.sin(state.t * 0.2 + 1) * r * 0.7;
+    ctx.fillStyle = 'rgba(255,107,107,0.15)';
+    ctx.shadowColor = '#ff6b6b';
+    ctx.shadowBlur = 10;
+    ctx.beginPath();
+    ctx.arc(tx, ty, 5 + t.forward.move, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.shadowBlur = 0;
+    ctx.fillStyle = '#ff6b6b';
+    ctx.font = '6px Consolas';
+    ctx.fillText('TET', tx, ty);
+
+    // RIZ (links)
+    var rx = cx + Math.cos(state.t * 0.2 + 2) * r * 0.7;
+    var ry = cy + Math.sin(state.t * 0.2 + 2) * r * 0.7;
+    ctx.fillStyle = 'rgba(107,107,255,0.15)';
+    ctx.shadowColor = '#6b6bff';
+    ctx.shadowBlur = 10;
+    ctx.beginPath();
+    ctx.arc(rx, ry, 5 + Math.abs(t.backward.move), 0, Math.PI * 2);
+    ctx.fill();
+    ctx.shadowBlur = 0;
+    ctx.fillStyle = '#6b6bff';
+    ctx.font = '6px Consolas';
+    ctx.fillText('RIZ', rx, ry);
+
+    // Verbindungen
+    ctx.strokeStyle = 'rgba(255,215,61,0.05)';
+    ctx.lineWidth = 0.5;
+    ctx.beginPath();
+    ctx.moveTo(lx, ly);
+    ctx.lineTo(tx, ty);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(lx, ly);
+    ctx.lineTo(rx, ry);
+    ctx.stroke();
+
+    ctx.fillStyle = 'rgba(255,255,255,0.03)';
+    ctx.font = '4px Consolas';
+    ctx.textBaseline = 'bottom';
+    ctx.fillText(t.formula, cx, cy - r * 0.5);
+}
+
+function drawShellLayer() {
+    var r = radius * 0.5;
+
+    ctx.strokeStyle = 'rgba(108,204,255,0.05)';
+    ctx.lineWidth = 0.5;
+    ctx.setLineDash([2, 4]);
+    ctx.beginPath();
+    ctx.arc(cx, cy, r, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    var shellColors = ['#ff6b6b', '#ffd93d', '#6bff6b'];
+    SHELL.real3E.forEach(function(label, i) {
+        var angle = (i / 3) * Math.PI * 2 + state.t * 0.03 + 0.5;
+        var x = cx + Math.cos(angle) * r * 0.7;
+        var y = cy + Math.sin(angle) * r * 0.7;
+        ctx.fillStyle = shellColors[i] + '33';
+        ctx.shadowColor = shellColors[i];
+        ctx.shadowBlur = 5;
+        ctx.beginPath();
+        ctx.arc(x, y, 4, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.shadowBlur = 0;
+        ctx.fillStyle = shellColors[i];
+        ctx.font = '4px Consolas';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'bottom';
+        ctx.fillText(label.replace('SHELL-', ''), x, y - 6);
+    });
+
+    ctx.fillStyle = 'rgba(108,204,255,0.05)';
+    ctx.font = '5px Consolas';
+    ctx.textBaseline = 'bottom';
+    ctx.fillText('🐚 SHELL', cx, cy - r * 0.75);
+}
+
+function drawWhirlRing() {
+    var r = radius * 0.7;
+    var n = 9;
+
+    ctx.strokeStyle = 'rgba(255,105,180,0.04)';
+    ctx.lineWidth = 0.5;
+    ctx.setLineDash([2, 4]);
+    ctx.beginPath();
+    ctx.arc(cx, cy, r, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    for (var i = 0; i < n; i++) {
+        var angle = (i / n) * Math.PI * 2 + state.t * 0.02;
+        var x = cx + Math.cos(angle) * r;
+        var y = cy + Math.sin(angle) * r;
+        var isActive = i === Math.floor(state.currentField / 9);
+
+        ctx.fillStyle = isActive ? 'rgba(255,105,180,0.15)' : 'rgba(255,255,255,0.01)';
+        ctx.shadowColor = isActive ? '#ff69b4' : 'transparent';
+        ctx.shadowBlur = isActive ? 10 : 0;
+        ctx.beginPath();
+        ctx.arc(x, y, isActive ? 6 : 2, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.shadowBlur = 0;
+
+        ctx.fillStyle = isActive ? '#ff69b4' : '#333';
+        ctx.font = isActive ? '5px Consolas' : '4px Consolas';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'bottom';
+        ctx.fillText(i + 1, x, y - 8);
+    }
+
+    // CAUSE-Kaskade
+    var colors = ['#ff6b6b', '#6bff6b', '#6b6bff', '#ffd93d'];
+    for (var i = 0; i < CAUSE_CASCADE.length; i++) {
+        var x = W - 126 + i * 28;
+        var isActive = CAUSE_CASCADE[i] === state.causeLevel;
+        ctx.fillStyle = isActive ? colors[i] : '#222';
+        ctx.fillRect(x, 8, 20, 14);
+        ctx.fillStyle = isActive ? '#000' : '#444';
+        ctx.font = '5px Consolas';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(CAUSE_CASCADE[i], x + 10, 15);
+    }
+
+    ctx.fillStyle = 'rgba(255,105,180,0.05)';
+    ctx.font = '4px Consolas';
+    ctx.textBaseline = 'bottom';
+    ctx.fillText('🌀 WHIRL · ' + state.currentField + '/' + state.fields, cx, cy + r + 10);
+}
+
+function drawStatus() {
+    var status = state.activeEngine;
+    var colors = {
+        'TETRIZ': '#ff6b6b',
+        'SHELL': '#6cf',
+        'DOO': '#ff44ff',
+        'DOOR': '#ff8c00'
+    };
+
+    ctx.fillStyle = 'rgba(255,255,255,0.02)';
+    ctx.fillRect(8, 8, 80, 14);
+    ctx.fillStyle = colors[status] || '#666';
+    ctx.font = '5px Consolas';
+    ctx.textAlign = 'left';
+    ctx.textBaseline = 'top';
+    ctx.fillText('▶ ' + status, 12, 10);
+
+    // TETRIZ-Werte
+    var t = state.tetriz;
+    ctx.fillStyle = 'rgba(255,255,255,0.02)';
+    ctx.fillRect(8, 24, 80, 16);
+    ctx.fillStyle = '#444';
+    ctx.font = '4px Consolas';
+    ctx.textBaseline = 'top';
+    ctx.fillText('x=' + t.x.toFixed(2), 12, 26);
+    ctx.fillText('y=' + t.y.toFixed(2), 40, 26);
+    ctx.fillText('z=' + t.z.toFixed(2), 68, 26);
+}
+
+// ============================================================
+// CONTROLS
+// ============================================================
+document.getElementById('btn-start').onclick = function() {
+    state.running = !state.running;
+    this.textContent = state.running ? '⏸ STOP' : '▶ START';
+    document.getElementById('state-display').textContent = state.running ? '● läuft' : '● gestoppt';
+    document.getElementById('state-display').style.color = state.running ? 'var(--gold)' : '#666';
+    log(state.running ? '▶ System gestartet' : '⏸ System gestoppt', 'octa');
+};
+
+document.getElementById('btn-tet').onclick = function() {
+    activateEngine('TETRIZ');
+    log('◈ TETRIZ aktiviert', 'tet');
+};
+
+document.getElementById('btn-riz').onclick = function() {
+    state.rizCount++;
+    document.getElementById('riz-value').textContent = state.rizCount;
+    log('🌀 RIZ aktiviert', 'riz');
+};
+
+document.getElementById('btn-shell').onclick = function() {
+    activateEngine('SHELL');
+};
+
+document.getElementById('btn-whirl').onclick = function() {
+    whirlSpin();
+    log('🌀 WHIRL: Feld ' + state.currentField + ' · CAUSE=' + state.causeLevel, 'whirl');
+};
+
+document.getElementById('btn-reset').onclick = function() {
+    state.running = false;
+    state.cycle = 0;
+    state.t = 0;
+    state.tetCount = 0;
+    state.rizCount = 0;
+    state.shellCount = 0;
+    state.whirlCount = 0;
+    state.tetriz = TETRIZ(1, 2, 3);
+    state.activeEngine = 'TETRIZ';
+    state.causeLevel = 3;
+    state.currentField = 0;
+    document.getElementById('btn-start').textContent = '▶ START';
+    document.getElementById('state-display').textContent = '● reset';
+    document.getElementById('state-display').style.color = '#f44';
+    document.getElementById('cycle-display').textContent = 'CYC 0';
+    document.getElementById('tet-value').textContent = '0';
+    document.getElementById('riz-value').textContent = '0';
+    document.getElementById('shell-value').textContent = '0';
+    document.getElementById('whirl-value').textContent = '0';
+    var els = document.querySelectorAll('.engine-box');
+    for (var i = 0; i < els.length; i++) {
+        els[i].classList.remove('active');
+    }
+    document.querySelector('.engine-box[data-engine="TETRIZ"]').classList.add('active');
+    log('⟲ RESET — System zurückgesetzt', 'octa');
+};
+
+document.getElementById('btn-auto').onclick = function() {
+    state.autoMode = !state.autoMode;
+    this.textContent = state.autoMode ? '⏸ PAUSE' : '▶ AUTO';
+    if (state.autoMode) {
+        state.running = true;
+        document.getElementById('btn-start').textContent = '⏸ STOP';
+        document.getElementById('state-display').textContent = '● auto';
+        document.getElementById('state-display').style.color = 'var(--gold)';
+        if (window.autoInterval) clearInterval(window.autoInterval);
+        window.autoInterval = setInterval(function() {
+            var engines = ['TETRIZ', 'SHELL', 'DOO', 'DOOR'];
+            var idx = Math.floor(Math.random() * engines.length);
+            activateEngine(engines[idx]);
+            whirlSpin();
+            log('🔄 ' + engines[idx] + ' · WHIRL=' + state.currentField, 'whirl');
+        }, 2500);
+        log('▶ AUTO · System rotiert', 'whirl');
+    } else {
+        clearInterval(window.autoInterval);
+        log('⏸ AUTO pausiert', 'octa');
+    }
+};
+
+// ============================================================
+// ENGINE-KLICKS
+// ============================================================
+var engineEls = document.querySelectorAll('.engine-box');
+for (var i = 0; i < engineEls.length; i++) {
+    engineEls[i].onclick = function() {
+        var key = this.getAttribute('data-engine');
+        activateEngine(key);
+    };
+}
+
+// ============================================================
+// TASTATUR
+// ============================================================
+document.addEventListener('keydown', function(e) {
+    if (e.key === ' ') { e.preventDefault(); document.getElementById('btn-start').click(); }
+    if (e.key === '1') activateEngine('TETRIZ');
+    if (e.key === '2') activateEngine('SHELL');
+    if (e.key === '3') activateEngine('DOO');
+    if (e.key === '4') activateEngine('DOOR');
+    if (e.key === 't') document.getElementById('btn-tet').click();
+    if (e.key === 'r') document.getElementById('btn-riz').click();
+    if (e.key === 'w') document.getElementById('btn-whirl').click();
+    if (e.key === 'x') document.getElementById('btn-reset').click();
+    if (e.key === 'a') document.getElementById('btn-auto').click();
+});
+
+// ============================================================
+// UHR
+// ============================================================
+function updateClock() {
+    document.getElementById('clock').textContent = '⏱️ ' + new Date().toLocaleTimeString();
+}
+setInterval(updateClock, 1000);
+updateClock();
+
+// ============================================================
+// INIT
+// ============================================================
+log('◈ UNIFIED · TETRIZ · RIZ · SHELL · WHIRL', 'octa');
+log('LEGO-Fixpunkt · TET-Bewegung · RIZ-Gegenbewegung', 'tet');
+log('🌀 WHIRL · 81 Felder · CAUSE/WIND/ZOOOG', 'whirl');
+log('⌨️  1=TETRIZ 2=SHELL 3=DOO 4=DOOR  w=WHIRL  x=Reset  a=Auto', 'shell');
+
+setTimeout(function() {
+    state.running = true;
+    document.getElementById('btn-start').textContent = '⏸ STOP';
+    document.getElementById('state-display').textContent = '● läuft';
+    document.getElementById('state-display').style.color = 'var(--gold)';
+    log('▶ System automatisch gestartet', 'whirl');
+}, 500);
+</script>
+</body>
+</html>
